@@ -11,11 +11,14 @@ public static class Program
         usage:
           gm8-builder info <game.exe>          summarise a GM8.0 executable's contents
           gm8-builder roundtrip <game.exe>     read it, write it back, and check the two agree
-          gm8-builder build <tree> <out.exe> [--gm8 <dir>] [--template <game.exe>] [--gm8x-fix]
+          gm8-builder build <tree> <out.exe> [--gm8 <dir>] [--template <game.exe>] [--gm8x-fix] [--lint]
                                               build a split tree. The runner, DLL, extensions and
                                               library init code come from a Game Maker 8.0 install
                                               (--gm8, or GM8_DIR), else from an earlier build.
-                                              --gm8x-fix applies gm8x_fix's runner patches
+                                              --gm8x-fix applies gm8x_fix's runner patches;
+                                              --lint checks the tree's GML first, and stops on errors
+          gm8-builder lint <file-or-dir>... [options]
+                                              check GML against Game Maker 8 (lint --help for more)
           gm8-builder compare <a.exe> <b.exe> [--limit N]
                                               list differences in content, N per section (default 10)
         """;
@@ -29,13 +32,14 @@ public static class Program
                 ["info", var exe] => Info(exe),
                 ["roundtrip", var exe] => RoundTrip(exe),
                 ["build", var tree, var output, .. var rest] => BuildTree(tree, output, rest),
+                ["lint", .. var rest] => LintCommand.Run(rest),
                 ["compare", var a, var b] => Compare.Run(ExeFile.Read(File.ReadAllBytes(a)), ExeFile.Read(File.ReadAllBytes(b)), 10),
                 ["compare", var a, var b, "--limit", var n] =>
                     Compare.Run(ExeFile.Read(File.ReadAllBytes(a)), ExeFile.Read(File.ReadAllBytes(b)), int.Parse(n)),
                 _ => Fail(Usage),
             };
         }
-        catch (Exception e) when (e is InvalidDataException or IOException or InvalidOperationException or NotSupportedException)
+        catch (Exception e) when (e is InvalidDataException or IOException or InvalidOperationException or NotSupportedException or ArgumentException)
         {
             return Fail($"gm8-builder: {e.Message}");
         }
@@ -84,7 +88,7 @@ public static class Program
     private static int BuildTree(string tree, string output, string[] options)
     {
         string? gm8 = Environment.GetEnvironmentVariable("GM8_DIR"), templatePath = null;
-        var fix = false;
+        bool fix = false, lint = false;
         for (var i = 0; i < options.Length; i++)
         {
             switch (options[i])
@@ -98,6 +102,9 @@ public static class Program
                 case "--gm8x-fix":
                     fix = true;
                     break;
+                case "--lint":
+                    lint = true;
+                    break;
                 default:
                     return Fail(Usage);
             }
@@ -106,6 +113,13 @@ public static class Program
             return Fail("gm8-builder: build needs --gm8 <Game Maker 8 directory> (or GM8_DIR), or --template <earlier build>");
 
         var sw = Stopwatch.StartNew();
+        if (lint)
+        {
+            var findings = LintCommand.CheckTree(tree, gm8);
+            if (findings.Count > 0) LintCommand.Print(findings);
+            if (findings.Any(f => f.IsError)) return Fail("gm8-builder: not built - the GML has errors");
+            sw.Restart();
+        }
         var install = string.IsNullOrEmpty(gm8) ? null : new Gm8Builder.Install.Gm8Install(gm8);
         var template = templatePath == null ? null : ExeFile.Read(File.ReadAllBytes(templatePath));
         var result = Builder.Build(tree, install, template, gm8xFix: fix);

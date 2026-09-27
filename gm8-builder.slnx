@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/Gm8Builder.Cli/Gm8Builder.Cli.csproj" />
     <Project Path="src/Gm8Builder/Gm8Builder.csproj" />
+    <Project Path="src/Gm8Builder.Lint/Gm8Builder.Lint.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Gm8Builder.Tests/Gm8Builder.Tests.csproj" />

@@ -1,12 +1,12 @@
 # gm8-builder
 
-Build Game Maker 8.0 games from source without Game Maker. Cross-platform,
-headless, and fast.
+Build Game Maker 8.0 games from source non-interactively.
 
-gm8-builder turns a [GmkSplitter](https://github.com/Medo42/Gmk-Splitter)
-source tree straight into a playable Windows executable. It doesn't run Game
-Maker, so builds work on any platform .NET runs on, suit CI and scripting, and
-typically finish in under a second.
+gm8-builder packs a Game Maker 8.0 source split with
+[GmkSplitter](https://github.com/Medo42/Gmk-Splitter) into a
+playable Windows executable without needing to run Game Maker.
+Some data from Game Maker is still required, but the IDE is not
+needed- see Requirements.
 
 ## Features
 
@@ -16,10 +16,11 @@ typically finish in under a second.
   its image, collision-mask and resource quirks, so builds match what Game Maker
   produces asset for asset.
 - **Fast.** A mid-sized game builds in well under a second.
+- **GML linter.** Catches code that would fail to compile in Game Maker 8 -
+  unknown or modern-only functions, wrong argument counts, syntax GM8 lacks -
+  before the game hits it at runtime.
 - **Built-in [gm8x_fix](https://github.com/skyfloogle/gm8x_fix) patches.**
   Optionally applies its runner fixes for input lag, joystick polling and more.
-- **Inspection tools.** Summarise, round-trip and diff existing GM8.0
-  executables.
 
 ## Requirements
 
@@ -34,8 +35,9 @@ typically finish in under a second.
   extensions/*.ged, extensions/*.dat
   ```
 
-  They contain Game Maker's runner and libraries, which are not
-  redistributable, so they are not included here.
+  Linting also needs `fnames`, Game Maker's list of built-in functions and
+  variables. These files contain Game Maker's runner and libraries, which are
+  not redistributable, so they are not included here.
 
 ## Installation
 
@@ -55,6 +57,12 @@ gm8-builder build path/to/tree game.exe --gm8 path/to/Game_Maker_8
 
 # The same, with gm8x_fix's patches applied to the runner
 gm8-builder build path/to/tree game.exe --gm8 path/to/Game_Maker_8 --gm8x-fix
+
+# Check the tree's GML first, and don't build if it has errors
+gm8-builder build path/to/tree game.exe --gm8 path/to/Game_Maker_8 --lint
+
+# Lint scripts and event files on their own
+gm8-builder lint path/to/tree --gm8 path/to/Game_Maker_8
 ```
 
 Set `GM8_DIR` to skip `--gm8`. Instead of an installation you can pass
@@ -65,6 +73,7 @@ Other commands:
 
 | Command | Description |
 |---|---|
+| `gm8-builder lint <file-or-dir>... [options]` | Check GML against Game Maker 8; `lint --help` lists options, including `--stdin`, `--json` and a line-based JSON `--serve` mode for editors and tools |
 | `gm8-builder info <game.exe>` | Summarise a GM8.0 executable's contents |
 | `gm8-builder compare <a.exe> <b.exe> [--limit N]` | List content differences between two executables, ignoring compression and random filler |
 | `gm8-builder roundtrip <game.exe>` | Read and rewrite an executable, and check the result is identical |
@@ -73,7 +82,7 @@ Other commands:
 
 Game Maker 8 doesn't compile GML into the executable. It appends the project,
 code included as source, to a fixed runner that compiles the code at start-up.
-So building a game means writing that data format and reproducing the IDE's
+Building a game means writing that data format and reproducing the IDE's
 transformations: pixel conversion, collision masks, runner resources and a few
 defaults.
 

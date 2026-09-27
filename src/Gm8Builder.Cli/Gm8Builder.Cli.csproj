@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Gm8Builder\Gm8Builder.csproj" />
+    <ProjectReference Include="..\Gm8Builder.Lint\Gm8Builder.Lint.csproj" />
   </ItemGroup>
 
 </Project>

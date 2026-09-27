@@ -34,30 +34,7 @@ public sealed class Gm8Install
     /// Each action library's init code, in file-name order - one string per
     /// library, used or not.
     /// </summary>
-    public List<string> LibraryInit()
-    {
-        var dir = Path.Combine(Directory, "lib");
-        if (!System.IO.Directory.Exists(dir)) return [];
-        return System.IO.Directory.EnumerateFiles(dir, "*.lib")
-            .Order(StringComparer.OrdinalIgnoreCase)
-            .Select(ReadLibraryInit)
-            .ToList();
-    }
-
-    /// <summary>An action library: version, tab caption, id, author, version, date, info, then the init code.</summary>
-    private static string ReadLibraryInit(string path)
-    {
-        var r = new ByteReader(File.ReadAllBytes(path));
-        var version = r.U32();
-        if (version != 500 && version != 520) throw new InvalidDataException($"{path}: library version {version}");
-        r.Str();
-        r.U32();
-        r.Str();
-        r.U32();
-        r.F64();
-        r.Str();
-        return r.Str();
-    }
+    public List<string> LibraryInit() => ActionLibrary.ReadAll(Directory).Select(l => l.InitCode).ToList();
 
     /// <summary>
     /// The named packages as a game embeds them. Game Maker numbers extension

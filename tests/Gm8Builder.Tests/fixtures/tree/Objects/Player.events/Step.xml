@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<event category="STEP">
+  <actions>
+    <action id="603">
+      <arguments>
+        <argument kind="STRING">if (x &lt; 10 &amp;&amp; y &gt; 2)
+{
+    x += 1;
+}</argument>
+      </arguments>
+    </action>
+    <action id="603">
+      <arguments>
+        <argument kind="STRING"/>
+      </arguments>
+    </action>
+  </actions>
+</event>

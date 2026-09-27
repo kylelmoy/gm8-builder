@@ -36,9 +36,12 @@ public sealed class ExtensionPackage
     /// <summary>A .gex's file contents, inflated, in file order (null for action libraries).</summary>
     public List<byte[]?>? Contents;
 
+    /// <summary>An installed package's description alone: its files, functions and constants, no contents.</summary>
+    public static ExtensionPackage ReadDescription(string ged) => ReadDescription(new ByteReader(File.ReadAllBytes(ged)), ged);
+
     public static ExtensionPackage ReadInstalled(string ged, string dat)
     {
-        var p = ReadDescription(new ByteReader(File.ReadAllBytes(ged)), ged);
+        var p = ReadDescription(ged);
         var d = File.ReadAllBytes(dat);
         p.Data = (BinaryPrimitives.ReadUInt32LittleEndian(d), d.AsSpan(4).ToArray());
         return p;
