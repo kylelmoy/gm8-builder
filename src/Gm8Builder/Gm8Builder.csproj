@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Everything but the command line, which is src/Gm8Builder.Cli. No Windows
+       APIs: this has to build a game on any platform. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAotCompatible>true</IsAotCompatible>
+    <RootNamespace>Gm8Builder</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Vendored: generated from gm8x_fix, see third_party/gm8x_fix/README.md. -->
+    <Compile Include="..\..\third_party\gm8x_fix\*.cs" Link="Pe\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Gm8Builder.Tests" />
+  </ItemGroup>
+
+</Project>

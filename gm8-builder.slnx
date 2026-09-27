@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Gm8Builder.Cli/Gm8Builder.Cli.csproj" />
+    <Project Path="src/Gm8Builder/Gm8Builder.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Gm8Builder.Tests/Gm8Builder.Tests.csproj" />
+  </Folder>
+</Solution>
