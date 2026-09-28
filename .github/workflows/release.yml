@@ -12,14 +12,14 @@ jobs:
     strategy:
       matrix:
         include:
-          - { rid: win-x64, os: ubuntu-latest }
-          - { rid: linux-x64, os: ubuntu-latest }
+          - { rid: win-x64, os: ubuntu-26.04 }
+          - { rid: linux-x64, os: ubuntu-26.04 }
           # The SDK only signs macOS binaries, which arm64 requires, when it runs on macOS.
           - { rid: osx-arm64, os: macos-latest }
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
       - run: dotnet test -c Release
@@ -30,17 +30,17 @@ jobs:
         run: |
           cp ../LICENSE ../README.md gm8-builder-${{ matrix.rid }}/
           zip -r gm8-builder-${{ github.ref_name }}-${{ matrix.rid }}.zip gm8-builder-${{ matrix.rid }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.rid }}
           path: out/*.zip
 
   release:
     needs: publish
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
