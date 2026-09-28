@@ -8,7 +8,7 @@
     <AssemblyName>gm8-builder</AssemblyName>
     <RootNamespace>Gm8Builder.Cli</RootNamespace>
     <InvariantGlobalization>true</InvariantGlobalization>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
   </PropertyGroup>
 
   <!-- Settings for the release binaries: one self-contained, trimmed file.
