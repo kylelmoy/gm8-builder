@@ -74,6 +74,13 @@ Set `GM8_DIR` to skip `--gm8`. Instead of an installation you can pass
 `--template <game.exe>`, an earlier build of the same game, to supply the
 runner, DLL and extensions.
 
+`--extensions <dir>` takes the extension packages from the `.gex` files in a
+directory instead of from the installation or template. An installation
+carries whatever versions were installed into it, and a template carries
+whatever its game was built with. A game repository that keeps its `.gex`
+files can build each commit with its own. Function ids are numbered as if
+exactly that directory's packages were installed.
+
 `--gm8x-fix` applies the same patches as `gm8x_fix -s` at the vendored
 commit, and the runner comes out byte-identical to gm8x_fix's. To leave some
 out, as gm8x_fix's `-n` options do, list their kinds after `--gm8x-fix-skip`:

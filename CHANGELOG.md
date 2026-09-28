@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- `build --extensions <dir>`: take the extension packages from a directory of
+  `.gex` files instead of from the installation or template.
+
 ## 0.1.0
 
 First release.

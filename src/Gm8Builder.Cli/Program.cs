@@ -13,10 +13,13 @@ public static class Program
         usage:
           gm8-builder info <game.exe>          summarise a GM8.0 executable's contents
           gm8-builder roundtrip <game.exe>     read it, write it back, and check the two agree
-          gm8-builder build <tree> <out.exe> [--gm8 <dir>] [--template <game.exe>] [--gm8x-fix [--gm8x-fix-skip <kinds>]] [--lint]
+          gm8-builder build <tree> <out.exe> [--gm8 <dir>] [--template <game.exe>] [--extensions <dir>]
+                                              [--gm8x-fix [--gm8x-fix-skip <kinds>]] [--lint]
                                               build a split tree. The runner, DLL, extensions and
                                               library init code come from a Game Maker 8.0 install
                                               (--gm8, or GM8_DIR), else from an earlier build.
+                                              --extensions takes the extension packages from the
+                                              .gex files in a directory instead
                                               --gm8x-fix applies gm8x_fix's runner patches, except the
                                               comma-separated kinds after --gm8x-fix-skip: memory,
                                               joystick, scheduler, input-lag, directplay, keyboard;
@@ -101,7 +104,7 @@ public static class Program
 
     private static int BuildTree(string tree, string output, string[] options)
     {
-        string? gm8 = Environment.GetEnvironmentVariable("GM8_DIR"), templatePath = null;
+        string? gm8 = Environment.GetEnvironmentVariable("GM8_DIR"), templatePath = null, extensions = null;
         bool fix = false, lint = false;
         string[] skip = [];
         for (var i = 0; i < options.Length; i++)
@@ -113,6 +116,9 @@ public static class Program
                     break;
                 case "--template" when i + 1 < options.Length:
                     templatePath = options[++i];
+                    break;
+                case "--extensions" when i + 1 < options.Length:
+                    extensions = options[++i];
                     break;
                 case "--gm8x-fix":
                     fix = true;
@@ -143,7 +149,7 @@ public static class Program
         }
         var install = string.IsNullOrEmpty(gm8) ? null : new Gm8Builder.Install.Gm8Install(gm8);
         var template = templatePath == null ? null : ExeFile.Read(File.ReadAllBytes(templatePath));
-        var result = Builder.Build(tree, install, template, gm8xFix: fix, gm8xFixSkip: skip);
+        var result = Builder.Build(tree, install, template, gm8xFix: fix, gm8xFixSkip: skip, extensions: extensions);
         var built = sw.ElapsedMilliseconds;
         sw.Restart();
         var bytes = result.Exe.Write();
