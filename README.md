@@ -24,7 +24,6 @@ needed- see Requirements.
 
 ## Requirements
 
-- [.NET 10 SDK](https://dotnet.microsoft.com/download)
 - A project in GmkSplitter's split-tree format
 - These files from a Game Maker 8.0 installation, or a copy of them:
 
@@ -40,6 +39,12 @@ needed- see Requirements.
   not redistributable, so they are not included here.
 
 ## Installation
+
+Download a build for Windows, Linux or macOS (Apple silicon) from
+[Releases](https://github.com/kylelmoy/gm8-builder/releases). It is a single
+file with nothing else to install.
+
+To build from source instead, with the [.NET 10 SDK](https://dotnet.microsoft.com/download):
 
 ```sh
 git clone https://github.com/kylelmoy/gm8-builder.git
@@ -68,6 +73,13 @@ gm8-builder lint path/to/tree --gm8 path/to/Game_Maker_8
 Set `GM8_DIR` to skip `--gm8`. Instead of an installation you can pass
 `--template <game.exe>`, an earlier build of the same game, to supply the
 runner, DLL and extensions.
+
+`--gm8x-fix` applies the same patches as `gm8x_fix -s` at the vendored
+commit, and the runner comes out byte-identical to gm8x_fix's. To leave some
+out, as gm8x_fix's `-n` options do, list their kinds after `--gm8x-fix-skip`:
+`memory`, `joystick`, `scheduler`, `input-lag`, `directplay` or `keyboard`.
+For example, `--gm8x-fix-skip keyboard` reproduces gm8x_fix v0.5.9, the latest
+release, which predates the keyboard_check_direct patch.
 
 Other commands:
 

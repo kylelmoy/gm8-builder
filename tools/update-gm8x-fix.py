@@ -20,6 +20,18 @@ import sys
 TOKEN = r"(-?0x[0-9a-fA-F]+|-?\d+|'(?:\\.|[^'])')"
 ESCAPES = {'0': 0, 'n': 10, 'r': 13, 't': 9, '\\': 92, "'": 39}
 
+# gm8x_fix's patch types, by the names gm8-builder's --gm8x-fix-skip takes.
+# Each matches one of gm8x_fix's "Don't offer" options (-nm, -nj, ...).
+KINDS = {
+    'MEM': 'memory',
+    'JOY': 'joystick',
+    'SCHED': 'scheduler',
+    'INPUTLAG': 'input-lag',
+    'RESET': 'display-reset',
+    'RELEASEDELAY': 'keyboard',
+    'DPLAY': 'directplay',
+}
+
 
 def value(s):
     if s.startswith("'"):
@@ -43,9 +55,12 @@ def main():
 
     patch_list = main_c[main_c.index('Patch patches[]'):]
     entries = re.findall(r'\{\.bytes = (\w+), \.name = "([^"]+)", \.type = (\w+)\}', patch_list)
-    wanted = [(array, name) for array, name, _ in entries if array.endswith('_80') or array == 'mempatch']
+    wanted = [(array, name, type) for array, name, type in entries if array.endswith('_80') or array == 'mempatch']
     if not wanted:
         sys.exit('no GM8.0 patches found - has gm8x_fix changed its layout?')
+    unknown = sorted({type for _, _, type in wanted if type not in KINDS})
+    if unknown:
+        sys.exit('new gm8x_fix patch types %s - name them in KINDS' % ', '.join(unknown))
 
     tables = {}
     for array, body in re.findall(r'PatchByte (\w+)\[\] = \{(.*?)\n\};', patches_c, re.S):
@@ -77,13 +92,16 @@ def main():
         '    /// <summary>The gm8x_fix commit these tables were generated from.</summary>',
         '    public const string UpstreamCommit = "%s";' % commit,
         '',
-        '    /// <summary>Each patch: name, then (file offset, original byte, patched byte) triples, ending at -1.</summary>',
-        '    private static readonly (string Name, int[] Bytes)[] Patches =',
+        '    /// <summary>',
+        '    /// Each patch: name, kind (what --gm8x-fix-skip takes), then (file offset,',
+        '    /// original byte, patched byte) triples, ending at -1.',
+        '    /// </summary>',
+        '    private static readonly (string Name, string Kind, int[] Bytes)[] Patches =',
         '    [',
     ]
-    for array, name in wanted:
+    for array, name, type in wanted:
         flat = [v for triple in tables[array] for v in triple]
-        lines.append('        ("%s", [' % name)
+        lines.append('        ("%s", "%s", [' % (name, KINDS[type]))
         for i in range(0, len(flat), 24):
             lines.append('            ' + ', '.join(literal(v) for v in flat[i:i + 24]) + ',')
         lines.append('        ]),')

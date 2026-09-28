@@ -1,7 +1,9 @@
 using System.Diagnostics;
+using System.Reflection;
 using Gm8Builder.Build;
 using Gm8Builder.Exe;
 using Gm8Builder.Model;
+using Gm8Builder.Pe;
 
 namespace Gm8Builder.Cli;
 
@@ -11,16 +13,19 @@ public static class Program
         usage:
           gm8-builder info <game.exe>          summarise a GM8.0 executable's contents
           gm8-builder roundtrip <game.exe>     read it, write it back, and check the two agree
-          gm8-builder build <tree> <out.exe> [--gm8 <dir>] [--template <game.exe>] [--gm8x-fix] [--lint]
+          gm8-builder build <tree> <out.exe> [--gm8 <dir>] [--template <game.exe>] [--gm8x-fix [--gm8x-fix-skip <kinds>]] [--lint]
                                               build a split tree. The runner, DLL, extensions and
                                               library init code come from a Game Maker 8.0 install
                                               (--gm8, or GM8_DIR), else from an earlier build.
-                                              --gm8x-fix applies gm8x_fix's runner patches;
+                                              --gm8x-fix applies gm8x_fix's runner patches, except the
+                                              comma-separated kinds after --gm8x-fix-skip: memory,
+                                              joystick, scheduler, input-lag, directplay, keyboard;
                                               --lint checks the tree's GML first, and stops on errors
           gm8-builder lint <file-or-dir>... [options]
                                               check GML against Game Maker 8 (lint --help for more)
           gm8-builder compare <a.exe> <b.exe> [--limit N]
                                               list differences in content, N per section (default 10)
+          gm8-builder --version
         """;
 
     public static int Main(string[] args)
@@ -36,6 +41,7 @@ public static class Program
                 ["compare", var a, var b] => Compare.Run(ExeFile.Read(File.ReadAllBytes(a)), ExeFile.Read(File.ReadAllBytes(b)), 10),
                 ["compare", var a, var b, "--limit", var n] =>
                     Compare.Run(ExeFile.Read(File.ReadAllBytes(a)), ExeFile.Read(File.ReadAllBytes(b)), int.Parse(n)),
+                ["--version"] => Version(),
                 _ => Fail(Usage),
             };
         }
@@ -49,6 +55,14 @@ public static class Program
     {
         Console.Error.WriteLine(message);
         return 1;
+    }
+
+    private static int Version()
+    {
+        // The SDK appends "+<commit>"; the version alone is what users compare.
+        var version = typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
+        Console.WriteLine($"gm8-builder {version.Split('+')[0]}");
+        return 0;
     }
 
     private static int Info(string path)
@@ -89,6 +103,7 @@ public static class Program
     {
         string? gm8 = Environment.GetEnvironmentVariable("GM8_DIR"), templatePath = null;
         bool fix = false, lint = false;
+        string[] skip = [];
         for (var i = 0; i < options.Length; i++)
         {
             switch (options[i])
@@ -102,6 +117,11 @@ public static class Program
                 case "--gm8x-fix":
                     fix = true;
                     break;
+                case "--gm8x-fix-skip" when i + 1 < options.Length:
+                    skip = options[++i].Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                    if (skip.FirstOrDefault(k => !Gm8xFix.Kinds.Contains(k)) is { } unknown)
+                        return Fail($"gm8-builder: unknown gm8x_fix patch kind \"{unknown}\" (kinds: {string.Join(", ", Gm8xFix.Kinds)})");
+                    break;
                 case "--lint":
                     lint = true;
                     break;
@@ -109,6 +129,7 @@ public static class Program
                     return Fail(Usage);
             }
         }
+        if (skip.Length > 0 && !fix) return Fail("gm8-builder: --gm8x-fix-skip needs --gm8x-fix");
         if (string.IsNullOrEmpty(gm8) && templatePath == null)
             return Fail("gm8-builder: build needs --gm8 <Game Maker 8 directory> (or GM8_DIR), or --template <earlier build>");
 
@@ -122,7 +143,7 @@ public static class Program
         }
         var install = string.IsNullOrEmpty(gm8) ? null : new Gm8Builder.Install.Gm8Install(gm8);
         var template = templatePath == null ? null : ExeFile.Read(File.ReadAllBytes(templatePath));
-        var result = Builder.Build(tree, install, template, gm8xFix: fix);
+        var result = Builder.Build(tree, install, template, gm8xFix: fix, gm8xFixSkip: skip);
         var built = sw.ElapsedMilliseconds;
         sw.Restart();
         var bytes = result.Exe.Write();

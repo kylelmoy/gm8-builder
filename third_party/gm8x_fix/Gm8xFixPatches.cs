@@ -14,13 +14,16 @@ public static partial class Gm8xFix
     /// <summary>The gm8x_fix commit these tables were generated from.</summary>
     public const string UpstreamCommit = "2f71b2417d6db705eaaf5e2003c839ac1f64fb9c";
 
-    /// <summary>Each patch: name, then (file offset, original byte, patched byte) triples, ending at -1.</summary>
-    private static readonly (string Name, int[] Bytes)[] Patches =
+    /// <summary>
+    /// Each patch: name, kind (what --gm8x-fix-skip takes), then (file offset,
+    /// original byte, patched byte) triples, ending at -1.
+    /// </summary>
+    private static readonly (string Name, string Kind, int[] Bytes)[] Patches =
     [
-        ("Memory patch", [
+        ("Memory patch", "memory", [
             0x116, 142, 174, -1, 0, 0,
         ]),
-        ("GM8.0 joystick patch", [
+        ("GM8.0 joystick patch", "joystick", [
             0x1399df, 83, 184, 0x1399e0, 106, 165, 0x1399e2, 232, 0, 0x1399e3, 97, 0, 0x1399e4, 123, 144, 0x1399e5, 244, 144, 0x1399e6, 255, 144, 0x139ae0, 83, 184,
             0x139ae1, 106, 165, 0x139ae2, 1, 0, 0x139ae3, 232, 0, 0x139ae4, 96, 0, 0x139ae5, 122, 144, 0x139ae6, 244, 144, 0x139ae7, 255, 144, 0x16466d, 80, 184,
             0x16466e, 83, 165, 0x16466f, 232, 0, 0x164670, 204, 0, 0x164671, 206, 0, 0x164672, 241, 144, 0x164673, 255, 144, 0x1646cd, 80, 184, 0x1646ce, 86, 165,
@@ -41,13 +44,13 @@ public static partial class Gm8xFix
             0x165030, 86, 165, 0x165031, 232, 0, 0x165032, 18, 0, 0x165033, 197, 0, 0x165034, 241, 144, 0x165035, 255, 144, 0x1650b3, 80, 184, 0x1650b4, 86, 165,
             0x1650b5, 232, 0, 0x1650b6, 142, 0, 0x1650b7, 196, 0, 0x1650b8, 241, 144, 0x1650b9, 255, 144, -1, 0, 0,
         ]),
-        ("GM8.0 scheduler patch", [
+        ("GM8.0 scheduler patch", "scheduler", [
             0x14461a, 184, 106, 0x14461b, 45, 1, 0x14461c, 0, 232, 0x14461d, 0, 23, 0x14461e, 0, 207, 0x14461f, 232, 243, 0x144620, 24, 255, 0x144621, 239, 144,
             0x144622, 255, 144, 0x144623, 255, 144, 0x191e82, 106, 116, 0x191e83, 111, 105, 0x191e84, 121, 109, 0x191e85, 71, 101, 0x191e86, 101, 66, 0x191e87, 116, 101,
             0x191e88, 68, 103, 0x191e89, 101, 105, 0x191e8a, 118, 110, 0x191e8b, 67, 80, 0x191e8c, 97, 101, 0x191e8d, 112, 114, 0x191e8e, 115, 105, 0x191e8f, 65, 111,
             0x191e90, 0, 100, -1, 0, 0,
         ]),
-        ("GM8.0 input lag patch", [
+        ("GM8.0 input lag patch", "input-lag", [
             0x13dcbd, 232, 255, 0x13dcbe, 254, 69, 0x13dcbf, 188, 220, 0x13dcc0, 245, 161, 0x13dcc1, 255, 4, 0x13dcc2, 137, 246, 0x13dcc3, 69, 88, 0x13dcc4, 240, 0,
             0x13dcc5, 137, 131, 0x13dcc6, 85, 56, 0x13dcc7, 244, 255, 0x13dcc8, 139, 117, 0x13dcc9, 69, 20, 0x13dcca, 240, 161, 0x13dccb, 139, 132, 0x13dccc, 85, 249,
             0x13dccd, 244, 88, 0x13dcce, 59, 0, 0x13dccf, 85, 128, 0x13dcd0, 252, 56, 0x13dcd1, 117, 0, 0x13dcd2, 7, 116, 0x13dcd3, 59, 10, 0x13dcd4, 69, 232,
@@ -101,10 +104,10 @@ public static partial class Gm8xFix
             0x13de53, 60, 69, 0x13de54, 246, 224, 0x13de55, 255, 139, 0x13de56, 232, 69, 0x13de57, 141, 252, 0x13de58, 60, 137, 0x13de59, 246, 69, 0x13de5a, 255, 228,
             -1, 0, 0,
         ]),
-        ("GM8.0 DirectPlay patch", [
+        ("GM8.0 DirectPlay patch", "directplay", [
             0x187380, 68, 0, 0x187381, 80, 80, 0x187382, 108, 108, 0x187383, 97, 97, 0x187384, 121, 121, 0x187385, 88, 88, -1, 0, 0,
         ]),
-        ("GM8.0 keyboard_check_direct lag fix patch", [
+        ("GM8.0 keyboard_check_direct lag fix patch", "keyboard", [
             0x1642e9, 102, 246, 0x1642ea, 133, 196, 0x1642eb, 192, 128, 0x1642ec, 15, 15, 0x1642ed, 149, 149, 0x1642ee, 192, 192, -1, 0, 0,
         ]),
     ];

@@ -1,4 +1,6 @@
+using System.Buffers.Binary;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Gm8Builder.Exe;
 using Gm8Builder.IO;
@@ -8,15 +10,15 @@ namespace Gm8Builder.Cli;
 
 /// <summary>
 /// Asset-by-asset comparison of two executables' contents - the check that a
-/// build matches what Game Maker produced. Random parts (cipher table, filler)
-/// and compression are not compared.
+/// build matches what Game Maker produced. Random parts (cipher table, filler,
+/// the runner's padding) and compression are not compared.
 /// </summary>
 public static class Compare
 {
     public static int Run(ExeFile a, ExeFile b, int limit)
     {
         var report = new Report(limit);
-        report.Diff("runner", a.Runner, b.Runner);
+        report.Diff("runner", Image(a.Runner), Image(b.Runner));
         report.Diff("settings", Settings(a.Settings), Settings(b.Settings));
         report.Diff("dll", (a.DllName, a.Dll), (b.DllName, b.Dll));
 
@@ -44,6 +46,26 @@ public static class Compare
         report.Diff("library init", x.LibraryInit, y.LibraryInit);
         report.Diff("room order", x.RoomOrder, y.RoomOrder);
         return report.Finish();
+    }
+
+    /// <summary>
+    /// The runner up to the end of its last section. The IDE pads the rest, up to
+    /// the game data, with random bytes.
+    /// </summary>
+    private static byte[] Image(byte[] runner)
+    {
+        if (runner.Length < 0x40) return runner;
+        var pe = BinaryPrimitives.ReadInt32LittleEndian(runner.AsSpan(0x3C));
+        if (pe < 0 || pe + 24 > runner.Length) return runner;
+        var sections = BinaryPrimitives.ReadUInt16LittleEndian(runner.AsSpan(pe + 6));
+        var table = pe + 24 + BinaryPrimitives.ReadUInt16LittleEndian(runner.AsSpan(pe + 20));
+        var end = 0L;
+        for (var i = 0; i < sections && table + i * 40 + 24 <= runner.Length; i++)
+        {
+            var header = runner.AsSpan(table + i * 40);
+            end = Math.Max(end, (long)BinaryPrimitives.ReadUInt32LittleEndian(header[20..]) + BinaryPrimitives.ReadUInt32LittleEndian(header[16..]));
+        }
+        return end > 0 && end < runner.Length ? runner[..(int)end] : runner;
     }
 
     /// <summary>The settings with their images inflated, so compression does not count as a difference.</summary>
@@ -99,6 +121,7 @@ public static class Compare
     }
 
     /// <summary>The first difference between two model values, as "path: a vs b", or null.</summary>
+    [UnconditionalSuppressMessage("Trimming", "IL2075", Justification = "The model is in Gm8Builder, a trimmer root assembly (see the .csproj).")]
     internal static string? First(object? a, object? b, string path)
     {
         if (a == null || b == null) return a == b ? null : $"{Path(path)}: {Show(a)} vs {Show(b)}";

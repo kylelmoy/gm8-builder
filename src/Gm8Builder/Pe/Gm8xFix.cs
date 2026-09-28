@@ -8,11 +8,17 @@ namespace Gm8Builder.Pe;
 /// </summary>
 public static partial class Gm8xFix
 {
-    /// <summary>Patch `runner` in place; returns the names of the patches applied.</summary>
-    public static List<string> Apply(byte[] runner)
+    /// <summary>The kinds of patch there are, for <see cref="Apply"/>'s `skip`.</summary>
+    public static IReadOnlyList<string> Kinds => Patches.Select(p => p.Kind).Distinct().ToArray();
+
+    /// <summary>
+    /// Patch `runner` in place, except for the kinds in `skip` (like gm8x_fix's
+    /// -n options); returns the names of the patches applied.
+    /// </summary>
+    public static List<string> Apply(byte[] runner, IReadOnlyCollection<string>? skip = null)
     {
-        var able = Patches.Where(p => Matches(runner, p.Bytes, original: true)).ToList();
-        foreach (var (_, bytes) in able)
+        var able = Patches.Where(p => skip?.Contains(p.Kind) != true && Matches(runner, p.Bytes, original: true)).ToList();
+        foreach (var (_, _, bytes) in able)
         {
             for (var i = 0; i + 2 < bytes.Length && bytes[i] >= 0; i += 3) runner[bytes[i]] = (byte)bytes[i + 2];
         }

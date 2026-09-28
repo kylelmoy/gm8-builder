@@ -17,7 +17,9 @@ public static class Builder
     public sealed record Result(ExeFile Exe, IReadOnlyList<string> Warnings);
 
     /// <param name="gm8xFix">Apply gm8x_fix's patches to the runner, as projects commonly do after building with Game Maker.</param>
-    public static Result Build(string tree, Gm8Install? install, ExeFile? template, int? seed = null, bool gm8xFix = false)
+    /// <param name="gm8xFixSkip">Kinds of gm8x_fix patch to leave out (see <see cref="Gm8xFix.Kinds"/>).</param>
+    public static Result Build(string tree, Gm8Install? install, ExeFile? template, int? seed = null, bool gm8xFix = false,
+        IReadOnlyCollection<string>? gm8xFixSkip = null)
     {
         if (install == null && template == null) throw new ArgumentException("a build needs a Game Maker installation or a template");
         var project = TreeReader.Read(tree);
@@ -47,7 +49,7 @@ public static class Builder
 
         var runner = RunnerBuilder.Build(install?.Runner() ?? template!.Runner, project.Icon, project.Version);
         var warnings = project.Warnings.ToList();
-        if (gm8xFix && Gm8xFix.Apply(runner).Count == 0) warnings.Add("gm8x_fix: no patch applied - the runner is already patched");
+        if (gm8xFix && Gm8xFix.Apply(runner, gm8xFixSkip).Count == 0) warnings.Add("gm8x_fix: no patch applied - the runner is already patched");
 
         var exe = new ExeFile
         {

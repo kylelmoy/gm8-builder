@@ -11,6 +11,21 @@
     <Version>0.1.0</Version>
   </PropertyGroup>
 
+  <!-- Settings for the release binaries: one self-contained, trimmed file.
+       compare walks the model by reflection, so the model is kept whole. -->
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <SelfContained>true</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+    <PublishTrimmed>true</PublishTrimmed>
+    <DebugType>none</DebugType>
+    <!-- No symbols, the referenced projects' included. -->
+    <AllowedReferenceRelatedFileExtensions>none</AllowedReferenceRelatedFileExtensions>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <TrimmerRootAssembly Include="Gm8Builder" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Gm8Builder\Gm8Builder.csproj" />
     <ProjectReference Include="..\Gm8Builder.Lint\Gm8Builder.Lint.csproj" />
